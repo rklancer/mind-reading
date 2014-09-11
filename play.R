@@ -1,6 +1,12 @@
-prediction <- NULL
-trials <- 0
+nTrials <- 0
 nCorrect <- 0
+pHistory <- c()
+nCorrectHistory <- c()
+
+prediction <- NULL
+lastChoice <- NULL
+plays <- c()
+situation <- c()
 
 pastPlaysBySituation <- list(
     wsw = c(),
@@ -12,10 +18,6 @@ pastPlaysBySituation <- list(
     ldw = c(),
     ldl = c()
 )
-
-lastChoice <- NULL
-plays <- c()
-situation <- c()
 
 play <- function(choice) {
     victory <- choice != prediction
@@ -43,9 +45,14 @@ other <- function(choice) {
 }
     
 predict <- function() {
-    last2Plays = tail(pastPlaysBySituation[situation], 2)
+    hasLast2Plays <- F
+    if ( !is.null(situation) && nchar(situation) == 3) {
+        last2Plays <- tail(pastPlaysBySituation[[situation]], 2)
+        hasLast2Plays <- length(last2Plays) == 2
+    }
     
-    prediction <<- if (length(last2Plays) >= 2 && last2Plays[1] == last2Plays[2]) {
+    prediction <<- if (hasLast2Plays && last2Plays[1] == last2Plays[2]) {
+        cat("you're so predictable!\n")
         ifelse(last2Plays[2] == 's', lastChoice, other(lastChoice))
     }
     else {
@@ -54,21 +61,27 @@ predict <- function() {
 }
 
 go <- function() {
+    prediction <<- predict()
     repeat {
-        prediction <<- predict()
         choice <- readline()[1]
+        
         if (choice == 'q') {
-            print("quitting")
+            plot(pHistory)
             return()
         }
-        victory <- play(choice)
-        trials <<- trials + 1
-        if ( victory ) {
-            print('YOU WIN');
-        } else {
-            nCorrect <<- nCorrect + 1
-            print('I WIN')
-            print(paste0('I have won ', 100 * nCorrect/trials, '% of trials (', nCorrect, ' of ', trials, '). p = ', pbinom(nCorrect, trials, 0.5, lower.tail=F)))
+        if ( ! any(choice == c('h', 't')) ) {
+            cat("bad choice:", choice)
+            next
         }
+        playerVictory <- play(choice)
+        nTrials <<- nTrials + 1
+        if ( ! playerVictory ) {
+            nCorrect <<- nCorrect + 1
+            cat('HAH! I WIN.\n')           
+        }
+        p <- pbinom(nCorrect, nTrials, 0.5, lower.tail=F)
+        pHistory <<- c(pHistory, p)
+        nCorrectHistory <<- c(nCorrectHistory, nCorrect)
+        cat(nCorrect, "-", nTrials - nCorrect, "\n")
     }
 }
