@@ -52,7 +52,6 @@ predict <- function() {
     }
     
     prediction <<- if (hasLast2Plays && last2Plays[1] == last2Plays[2]) {
-        cat("you're so predictable!\n")
         ifelse(last2Plays[2] == 's', lastChoice, other(lastChoice))
     }
     else {
