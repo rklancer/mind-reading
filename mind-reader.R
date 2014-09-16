@@ -7,6 +7,7 @@ mindReader <- function() {
     lastChoice <- NULL
     plays <- c()
     situation <- c()
+    playerVictory <- NULL
     
     pastPlaysBySituation <- list(
         wsw = c(),
@@ -22,7 +23,7 @@ mindReader <- function() {
     play <- function(choice) {
         nTrials <<- nTrials + 1
         # handle the win or loss
-        playerVictory <- choice != prediction
+        playerVictory <<- choice != prediction
         
         if ( ! playerVictory ) {
             nCorrect <<- nCorrect + 1
@@ -47,8 +48,6 @@ mindReader <- function() {
          
         situation <<- paste(tail(plays, 3), collapse='')
         prediction <<- predict()
-        
-        playerVictory
     }
     
     other <- function(choice) {
@@ -82,7 +81,7 @@ mindReader <- function() {
                 cat("bad choice:", choice)
                 next
             }
-            playerVictory <- play(choice)
+            play(choice)
             nTrials <<- nTrials + 1
             if ( ! playerVictory ) {
                 nCorrect <<- nCorrect + 1
@@ -97,6 +96,7 @@ mindReader <- function() {
     
     getData <- function() {
         list(
+            playerVictory = playerVictory,
             nTrials = nTrials,
             nCorrect = nCorrect,
             nCorrectHistory = nCorrectHistory,

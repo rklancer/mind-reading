@@ -4,26 +4,23 @@ source("mind-reader.R")
 shinyServer(function(input, output) {
     reader <- mindReader()
     
-    lastHeads <- -1
-    lastTails <- -1
+    lastHeads <- 0
+    lastTails <- 0
     
     lastStats <- reactive({
         if (input$tail > lastTails) {
             lastTails <<- input$tail
-            play <- "t"
+            reader$play("t")
         }
         if (input$head > lastHeads) {
             lastHeads <<- input$head
-            play <- "h"
-        }
-        # play
-        
-        victory <- reader$play(play)
+            reader$play("h")
+        } 
+
         data <- reader$getData()
         # deeply confused about whose perspective to take
         # ("victory" measn player victory, but nCorrect means # computer victories)
-       # ifelse(victory, "you win", "I WIN!")
-        list(message = ifelse(victory, "you win", "I WIN!"), computerScore = data$nCorrect, humanScore = data$nTrials - data$nCorrect)
+        list(message = ifelse(data$playerVictory, "you win", "I WIN!"), computerScore = data$nCorrect, humanScore = data$nTrials - data$nCorrect)
     })
     
     output$message <- renderText({ lastStats()$message })
