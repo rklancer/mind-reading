@@ -129,5 +129,10 @@ mindReader <- function() {
     
     prediction <<- predict()
     
-    list(go = go, play = play, getStats = getStats, getStatsHistory = getStatsHistory)
+    list(
+        go = go, 
+        play = play, 
+        getStats = getStats, 
+        getStatsHistory = getStatsHistory
+    )
 }
