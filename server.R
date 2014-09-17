@@ -35,4 +35,12 @@ shinyServer(function(input, output) {
     output$message <- renderText({ lastStats()$message })
     output$computerScore <- renderText({ lastStats()$computerScore })
     output$humanScore <- renderText({ lastStats()$humanScore })
+    
+    output$plot <- renderPlot({
+        if (input$done > 0) {
+            plot(reader$getStatsHistory()$pHistory)
+            stats = reader$getStats()
+            cat("informed predictions: ", stats$nInformedPredictions, "; correct: ",  stats$nCorrectInformedPredictions)
+        }
+    })
 })
