@@ -97,7 +97,7 @@ mindReader <- function() {
         
     predict <- function() {
         hasLast2Plays <- FALSE
-        if ( !is.null(situation) && nchar(situation) == 3) {
+        if ( ! is.null(situation) && nchar(situation) == 3 ) {
             last2Plays <- tail(pastPlaysBySituation[[situation]], 2)
             hasLast2Plays <- length(last2Plays) == 2
         }
