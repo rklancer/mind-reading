@@ -1,18 +1,45 @@
 mindReader <- function() {
+
+    # total number of user's head or tail calls
     nTrials <- 0
+
+    # total number of calls guessed correctly by the algorithm
     nCorrectPredictions <- 0
+
+    # total number of calls guessed correctly by the algorithm where the prediction was made
+    # based on past user plays (i.e., this excludes random guesses)
     nCorrectInformedPredictions <- 0
+
+    # total number of calls where the algorithm guessed based on past user plays, i.e., non-randomly
     nInformedPredictions <- 0
+
+    # history of p-values of one-sided binomial test of null hypothesis that computer's predictions
+    # are different that user's plays with P = 0.5, assuming indepdence of plays.
     pHistory <- c()
+
+    # history of number of correct guesses
     nCorrectHistory <- c()
     
     lastChoice <- NULL
+
+    # character vector of all "plays", except the first, indicating whether player played
+    # same or different. 
+    # (play[i] == 's' means player played Same in trial i+1, 'd' means Different)
     plays <- c()
+
+    # the current "situation", as defined by Shannon, as a character vector 
+    # (e.g., 'wsw' == player Won, played Same, Won, etc.)
+    # usually of length 3 (length is 0 before the first play, 1 before the second)
     situation <- c()
+
+    # was the most recently tested prediction correct?
     correctPrediction <- NULL
-    # was prediction informed by data, or random?
+
+    # was the current prediction informed by data, or random?
     informedPrediction <- FALSE
     
+    # for each past "situation" (eg player Won, played Same, Won), whether the user played same ('s')
+    # or different ('d')
     pastPlaysBySituation <- list(
         wsw = c(),
         wsl = c(),
@@ -27,7 +54,7 @@ mindReader <- function() {
     play <- function(choice) {
         nTrials <<- nTrials + 1
         
-        # increment this here, rather than at prediction time, so at the end we don't count the unused prediction
+        # increment this here, rather than at prediction time, so we don't count the unused prediction at the end
         if (informedPrediction) {
             nInformedPredictions <<- nInformedPredictions + 1
         }
@@ -123,7 +150,8 @@ mindReader <- function() {
     getStatsHistory <- function() {
         list(
             nCorrectHistory = nCorrectHistory,
-            pHistory = pHistory
+            pHistory = pHistory,
+            pastPlaysBySituation = pastPlaysBySituation
         )
     }
     
