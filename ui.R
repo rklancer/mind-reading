@@ -5,5 +5,5 @@ shinyUI(fluidPage(
     actionButton("head", "Heads"),
     actionButton("tail", "Tails"),
     textOutput("message"),
-    p("score: ", textOutput("computerScore"), " - ", textOutput("humanScore"))
+    p("score: ", textOutput("computerScore", span), " - ", textOutput("humanScore", span))
 ))

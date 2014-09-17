@@ -1,13 +1,17 @@
 mindReader <- function() {
     nTrials <- 0
-    nCorrect <- 0
+    nCorrectPredictions <- 0
+    nCorrectInformedPredictions <- 0
+    nInformedPredictions <- 0
     pHistory <- c()
     nCorrectHistory <- c()
     
     lastChoice <- NULL
     plays <- c()
     situation <- c()
-    playerVictory <- NULL
+    correctPrediction <- NULL
+    # was prediction informed by data, or random?
+    informedPrediction <- FALSE
     
     pastPlaysBySituation <- list(
         wsw = c(),
@@ -22,16 +26,26 @@ mindReader <- function() {
     
     play <- function(choice) {
         nTrials <<- nTrials + 1
-        # handle the win or loss
-        playerVictory <<- choice != prediction
         
-        if ( ! playerVictory ) {
-            nCorrect <<- nCorrect + 1
+        # increment this here, rather than at prediction time, so at the end we don't count the unused prediction
+        if (informedPrediction) {
+            nInformedPredictions <<- nInformedPredictions + 1
+        }
+            
+        # handle the win or loss
+        correctPrediction <<- (choice == prediction)
+        
+        if ( correctPrediction ) {
+            nCorrectPredictions <<- nCorrectPredictions + 1
+            if (informedPrediction) {
+                nCorrectInformedPredictions <<- nCorrectInformedPredictions + 1
+            }
         }
         
-        p <- pbinom(nCorrect, nTrials, 0.5, lower.tail=F)
+        p <- pbinom(nCorrectPredictions, nTrials, 0.5, lower.tail=F)
+        # pHistory should perhaps be calculated by client code using nCorrectHistory
         pHistory <<- c(pHistory, p)
-        nCorrectHistory <<- c(nCorrectHistory, nCorrect)        
+        nCorrectHistory <<- c(nCorrectHistory, nCorrectPredictions)        
         
         # store the play for use by prediction algorithm
         if ( ! is.null(lastChoice) ) {
@@ -44,7 +58,7 @@ mindReader <- function() {
             plays <<- c(plays, play)
         }
         lastChoice <<- choice
-        plays <<- c(plays, ifelse(playerVictory, 'w', 'l'))
+        plays <<- c(plays, ifelse(correctPrediction, 'l', 'w'))
          
         situation <<- paste(tail(plays, 3), collapse='')
         prediction <<- predict()
@@ -55,17 +69,19 @@ mindReader <- function() {
     }
         
     predict <- function() {
-        hasLast2Plays <- F
+        hasLast2Plays <- FALSE
         if ( !is.null(situation) && nchar(situation) == 3) {
             last2Plays <- tail(pastPlaysBySituation[[situation]], 2)
             hasLast2Plays <- length(last2Plays) == 2
         }
         
-        prediction <<- if (hasLast2Plays && last2Plays[1] == last2Plays[2]) {
-            ifelse(last2Plays[2] == 's', lastChoice, other(lastChoice))
+        if (hasLast2Plays && last2Plays[1] == last2Plays[2]) {
+            informedPrediction <<- TRUE
+            return(ifelse(last2Plays[2] == 's', lastChoice, other(lastChoice)))
         }
         else {
-            sample(c('h', 't'), 1)
+            informedPrediction <<- FALSE
+            return(sample(c('h', 't'), 1))
         }
     }
     
@@ -83,22 +99,29 @@ mindReader <- function() {
             }
             play(choice)
             nTrials <<- nTrials + 1
-            if ( ! playerVictory ) {
-                nCorrect <<- nCorrect + 1
+            if ( correctPrediction ) {
+                nCorrectPredictions <<- nCorrectPredictions + 1
                 cat('HAH! I WIN.\n')           
             }
-            p <- pbinom(nCorrect, nTrials, 0.5, lower.tail=F)
+            p <- pbinom(nCorrectPredictions, nTrials, 0.5, lower.tail=F)
             pHistory <<- c(pHistory, p)
-            nCorrectHistory <<- c(nCorrectHistory, nCorrect)
-            cat(nCorrect, "-", nTrials - nCorrect, "\n")
+            nCorrectHistory <<- c(nCorrectHistory, nCorrectPredictions)
+            cat(nCorrectPredictions, "-", nTrials - nCorrectPredictions, "\n")
         }
     }
     
-    getData <- function() {
+    getStats <- function() {
         list(
-            playerVictory = playerVictory,
+            correctPrediction = correctPrediction,
             nTrials = nTrials,
-            nCorrect = nCorrect,
+            nCorrectPredictions = nCorrectPredictions,            
+            nInformedPredictions = nInformedPredictions,
+            nCorrectInformedPredictions = nCorrectInformedPredictions
+        )
+    }
+
+    getStatsHistory <- function() {
+        list(
             nCorrectHistory = nCorrectHistory,
             pHistory = pHistory
         )
@@ -106,5 +129,5 @@ mindReader <- function() {
     
     prediction <<- predict()
     
-    list(go = go, play = play, getData = getData)
+    list(go = go, play = play, getStats = getStats)
 }
