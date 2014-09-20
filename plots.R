@@ -106,9 +106,7 @@ plotPlaysBySituation <- function(history) {
 	facet_grid(. ~ situation, labeller = labeller) +
 	scale_x_discrete(labels = c("different", "same")) +
 	theme(axis.text.x = element_text(angle=45)) +
-	ylab("Number of plays") +
-	xlab("Subsequent play") +
-	ggtitle("Your play following past game situations")
-
-
+	ylab("Count") +
+	xlab("Following move") +
+	ggtitle("Your moves following previous game situations")
 }
