@@ -4,8 +4,7 @@ cumbinom <- function (wins) {
 	})
 }
 
-plotOverallScoreAndPvalue <- function(history) {
-	# get the cumulative scores
+cumulativeScoreAndPvalue <- function(history) {
 	df <- with(history, data.frame(
 		    trial         = seq_along(predictions), 
 		    computerScore = cumsum(predictions==choices), 
@@ -25,16 +24,29 @@ plotOverallScoreAndPvalue <- function(history) {
 		value    = pHistory, 
 		type     = 'pvalue'
 	))
+	df
+}
 
-	g <- ggplot(df, 
-			aes(
-				x     = trial, 
-				y     = value
-			)
-		) + 
-		facet_grid(type ~ ., scale = 'free') + 
-		geom_step(aes(color = variable)) + 
-		scale_color_hue(labels = c("Computer's score", "Your score", "P(better than random)")) +
+plotScores <- function(df) {
+	ggplot(df, 
+		aes(
+			x     = trial, 
+			y     = value
+		)
+	) + 
+	facet_grid(type ~ ., scale = 'free') + 
+	geom_step(aes(color = variable)) + 
+	scale_color_hue(labels = c("Computer's score", "Your score", "P(better than random)")) +
+	guides(color = guide_legend(title=NULL)) +
+	xlab("Trial") +
+	ylab(NULL) 
+}
+
+
+plotOverallScoreAndPvalue <- function(history) {
+	# get the cumulative scores
+
+	g <- plotScores(cumulativeScoreAndPvalue(history)) +
 		geom_rect(
 	    	aes(
 				ymin  = -Inf, 
@@ -46,22 +58,57 @@ plotOverallScoreAndPvalue <- function(history) {
 			color=alpha('black', 0)
 		) + 
 		scale_alpha_manual(values = c(0, 0.15), labels=c("Random", "From past behavior")) +
-		guides(
-			color = guide_legend(title=NULL), 
-			alpha = guide_legend(title="Prediction")
-		) + 
-		xlab("Trial") + 
-		ylab(NULL) + 
-		ggtitle("Running score and p-value for one-sided binomial\ntest of P(computer guesses correctly) > 0.5")
+ 		guides(alpha = guide_legend(title="Prediction")) + 
+		ggtitle("Running score and p-value for one-sided\nbinomial test of P(computer guesses correctly) > 0.5")
 }
 
 
+plotInformedScoreAndPvalue <- function(history) {
+	h <- list(
+		predictions = history$predictions[history$predictionInformed],
+		choices = history$choices[history$predictionInformed]
+	)
 
-plotInformedScoreAndPvalue <- function() {
-
+	plotScores(cumulativeScoreAndPvalue(h)) + 
+	ggtitle("Hypothetical running score and p-value for one-sided\nbinomial test of P(computer guesses correctly) > 0.5\n(considering only guesses informed by player behavior)")
 }
 
-plotPlaysBySituation <- function() {
+plotPlaysBySituation <- function(history) {
+
+	plays <- sapply(history$pastPlaysBySituation, function(v) {
+		c(d = sum(v=='d'), s = sum(v=='s'))
+	})
+
+	df <- melt(plays)
+	names(df) <- c('sd', 'situation', 'count')
+
+	labeller <- function(var, value) {
+	    value <- as.character(value)
+	    if (var=='situation') { 
+	        value[value=="ldl"] <- "lost\nplayed differently\nlost"
+	        value[value=="ldw"] <- "lost\nplayed differently\nwon"
+	        value[value=="lsl"] <- "lost\nplayed same\nlost"
+	        value[value=="lsw"] <- "lost\nplayed same\nwon"
+	        value[value=="wdl"] <- "won\nplayed differently\nlost"
+	        value[value=="wdw"] <- "won\nplayed differently\nwon"
+	        value[value=="wsl"] <- "won\nplayed same\nlost"
+	        value[value=="wsw"] <- "won\nplayed same\nwon"
+	    }
+	    return(value)
+	}
+
+	ggplot(df, aes(
+			x=sd, 
+			y=count, 
+			fill=sd)
+	) + 
+	geom_bar(stat="identity", show_guide=F) + 
+	facet_grid(. ~ situation, labeller = labeller) +
+	scale_x_discrete(labels = c("different", "same")) +
+	theme(axis.text.x = element_text(angle=45)) +
+	ylab("Number of plays") +
+	xlab("Subsequent play") +
+	ggtitle("Your play following past game situations")
+
 
 }
-
