@@ -1,43 +1,9 @@
 mindReader <- function() {
 
-    # total number of user's head or tail calls
-    nTrials <- 0
+    predictions <- c()
+    choices <- c()
+    predictionInformed <- c()
 
-    # total number of calls guessed correctly by the algorithm
-    nCorrectPredictions <- 0
-
-    # total number of calls guessed correctly by the algorithm where the prediction was made
-    # based on past user plays (i.e., this excludes random guesses)
-    nCorrectInformedPredictions <- 0
-
-    # total number of calls where the algorithm guessed based on past user plays, i.e., non-randomly
-    nInformedPredictions <- 0
-
-    # history of p-values of one-sided binomial test of null hypothesis that computer's predictions
-    # are different that user's plays with P = 0.5, assuming indepdence of plays.
-    pHistory <- c()
-
-    # history of number of correct guesses
-    nCorrectHistory <- c()
-    
-    lastChoice <- NULL
-
-    # character vector of all "plays", except the first, indicating whether player played
-    # same or different. 
-    # (play[i] == 's' means player played Same in trial i+1, 'd' means Different)
-    plays <- c()
-
-    # the current "situation", as defined by Shannon, as a character vector 
-    # (e.g., 'wsw' == player Won, played Same, Won, etc.)
-    # usually of length 3 (length is 0 before the first play, 1 before the second)
-    situation <- c()
-
-    # was the most recently tested prediction correct?
-    correctPrediction <- NULL
-
-    # was the current prediction informed by data, or random?
-    informedPrediction <- FALSE
-    
     # for each past "situation" (eg player Won, played Same, Won), whether the user played same ('s')
     # or different ('d')
     pastPlaysBySituation <- list(
@@ -51,116 +17,129 @@ mindReader <- function() {
         ldl = c()
     )
     
-    play <- function(choice) {
-        nTrials <<- nTrials + 1
-        
-        # increment this here, rather than at prediction time, so we don't count the unused prediction at the end
-        if (informedPrediction) {
-            nInformedPredictions <<- nInformedPredictions + 1
-        }
-            
-        # handle the win or loss
-        correctPrediction <<- (choice == prediction)
-        
-        if ( correctPrediction ) {
-            nCorrectPredictions <<- nCorrectPredictions + 1
-            if (informedPrediction) {
-                nCorrectInformedPredictions <<- nCorrectInformedPredictions + 1
-            }
-        }
-        
-        p <- pbinom(nCorrectPredictions, nTrials, 0.5, lower.tail=F)
-        # pHistory should perhaps be calculated by client code using nCorrectHistory
-        pHistory <<- c(pHistory, p)
-        nCorrectHistory <<- c(nCorrectHistory, nCorrectPredictions)        
-        
-        # store the play for use by prediction algorithm
-        if ( ! is.null(lastChoice) ) {
-            play = if (choice == lastChoice) 's' else 'd'
-    
-            if (nchar(situation) == 3) {
-                # repeated use of [[ here because R doesn't let you grab a *reference* to the list element, it copies on assignment.
-                pastPlaysBySituation[[situation]] <<- c(pastPlaysBySituation[[situation]], play)
-            }
-            plays <<- c(plays, play)
-        }
-        lastChoice <<- choice
-        plays <<- c(plays, ifelse(correctPrediction, 'l', 'w'))
-         
-        situation <<- paste(tail(plays, 3), collapse='')
-        prediction <<- predict()
+    ## Pure functions   
+
+    flip <- function() {
+        sample(c('h', 't'), 1)
     }
-    
-    other <- function(choice) {
-        if (choice == 'h') 't' else 'h'
+
+    concat <- function(v) {
+        paste(v, collapse='')
     }
-        
-    predict <- function() {
-        hasLast2Plays <- FALSE
-        if ( ! is.null(situation) && nchar(situation) == 3 ) {
-            last2Plays <- tail(pastPlaysBySituation[[situation]], 2)
-            hasLast2Plays <- length(last2Plays) == 2
-        }
-        
-        if (hasLast2Plays && last2Plays[1] == last2Plays[2]) {
-            informedPrediction <<- TRUE
-            return(ifelse(last2Plays[2] == 's', lastChoice, other(lastChoice)))
-        }
-        else {
-            informedPrediction <<- FALSE
-            return(sample(c('h', 't'), 1))
-        }
-    }
-    
-    go <- function() {
-        repeat {
-            choice <- readline()[1]
-            
-            if (choice == 'q') {
-                plot(pHistory)
-                return()
-            }
-            if ( ! any(choice == c('h', 't')) ) {
-                cat("bad choice:", choice)
-                next
-            }
-            play(choice)
-            nTrials <<- nTrials + 1
-            if ( correctPrediction ) {
-                nCorrectPredictions <<- nCorrectPredictions + 1
-                cat('HAH! I WIN.\n')           
-            }
-            p <- pbinom(nCorrectPredictions, nTrials, 0.5, lower.tail=F)
-            pHistory <<- c(pHistory, p)
-            nCorrectHistory <<- c(nCorrectHistory, nCorrectPredictions)
-            cat(nCorrectPredictions, "-", nTrials - nCorrectPredictions, "\n")
-        }
-    }
-    
-    getStats <- function() {
+
+    choose <- function(headsOrTails, play) {
         list(
-            correctPrediction = correctPrediction,
-            nTrials = nTrials,
-            nCorrectPredictions = nCorrectPredictions,            
-            nInformedPredictions = nInformedPredictions,
-            nCorrectInformedPredictions = nCorrectInformedPredictions
+            hs = 'h',
+            hd = 't',
+            ts = 't',
+            td = 'h'
+        )[[concat(c(headsOrTails, play))]]
+    }
+
+    winsAndLosses <- function(predictions, choices) {
+        ifelse(predictions == choices, 'l', 'w')
+    }
+
+    plays <- function(choices) {
+        n <- length(choices)
+        ifelse(tail(choices, n-1) == head(choices, n-1), 's', 'd')
+    }
+
+    situations <- function(predictions, choices) {
+        # sequence of 'w', 'l'
+        wl <- winsAndLosses(predictions, choices)
+        # sequence of 's', 'd'
+        sd <- plays(choices)
+
+        n <- length(sd)
+        M <- rbind(head(wl, n), sd, tail(wl, n))
+        apply(M, 2, concat)
+    }
+
+    ## getters (affected by, but don't change, state)
+
+    # 'wsw', etc; NA if not enough plays yet (i.e,. < 2 plays)
+    getSituation <- function() {
+        situations(tail(predictions, 2), tail(choices, 2))[1]
+    }
+
+    predict <- function() {
+        situation <- getSituation()
+
+        cat("\nPredicting using situation: ", situation)
+
+        if ( ! is.na(situation) ) {
+            last2Plays <- tail(pastPlaysBySituation[[situation]], 2)
+            if (length(last2Plays) == 2 && identical(last2Plays[1], last2Plays[2])) {
+                cat(" (informed prediction!)")
+                return(list(
+                    prediction = choose(tail(choices, 1), last2Plays[1]),
+                    informed = TRUE
+                ))
+            }
+        }
+
+        list(
+            prediction = flip(),
+            informed = FALSE
         )
     }
 
-    getStatsHistory <- function() {
+    getScore <- function() {
         list(
-            nCorrectHistory = nCorrectHistory,
-            pHistory = pHistory,
-            pastPlaysBySituation = pastPlaysBySituation
+            computerScore = sum(predictions == choices),
+            playerScore =   sum(predictions != choices)
         )
     }
     
-    prediction <<- predict()
+    getHistory <- function() {
+        list(
+            choices = choices,
+            predictions = predictions,
+            predictionInformed = predictionInformed,
+            situations = situations(predictions, choices),
+            pastPlaysBySituation = pastPlaysBySituation
+        )
+    }    
+
+    ## stateful updates
+
+    # Statefully updates pastPlaysBySituation with the most recent choice.
+    # (Better than recaculating it every play)
+    # Be sure to call this only once per play.
+    updatePastPlaysBySituation <- function(situation, play) {
+        if ( is.na(situation) ) {
+            return()
+        }
+        pastPlaysBySituation[[situation]] <<- c(pastPlaysBySituation[[situation]], play)
+        cat("\nupdating situation: ", situation, " for play: ", play, "\n")
+    }
+
+    play <- function(choice) {
+
+        if ( ! (identical(choice, 'h') || identical(choice, 't')) ) {
+            # raise an error?
+            return()
+        }
+
+        # predict the choice before looking at it. No cheating!
+        results <- predict()
+
+        # before updating 'plays' and 'choices' associate the current play with the situation that
+        # preceded it
+        previousSituation <- getSituation()
+        play <- plays(c(tail(choices, 1), choice))
+        updatePastPlaysBySituation(previousSituation, play)
+
+        # and record the prediction and choice
+        predictions <<- c(predictions, results$prediction)
+        predictionInformed <<- c(predictionInformed, results$informed)
+        choices <<- c(choices, choice)
+    }
     
     list(
-        go = go, 
-        play = play, 
-        getStats = getStats, 
-        getStatsHistory = getStatsHistory
+        play = play,
+        getScore = getScore,
+        getHistory = getHistory
     )
 }

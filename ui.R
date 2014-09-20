@@ -5,8 +5,8 @@ shinyUI(fluidPage(
     actionButton("head", "Heads"),
     actionButton("tail", "Tails"),
     br(),
-    p("who won: ", textOutput("message", span)),
-    p("score: ", textOutput("computerScore", span), " - ", textOutput("humanScore", span)),
+    textOutput("message", h2),
+    p("score: ", textOutput("computerScore", span), " - ", textOutput("playerScore", span)),
     actionButton("done", "had enough?"),
     plotOutput("plot")
 ))
