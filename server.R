@@ -60,7 +60,8 @@ shinyServer(function(input, output) {
     output$informedPlotAvailable <- renderText({
         if (sum(history()$predictionInformed) > 1) 'T' else 'F'
     })
-
+    outputOptions(output, 'informedPlotAvailable', suspendWhenHidden=F)
+    
     output$playsBySituation <- renderPlot({
         print(plotPlaysBySituation(history()))
     })
