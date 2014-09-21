@@ -49,7 +49,7 @@ shinyServer(function(input, output) {
     })
 
     output$overallPlotAvailable <- renderText({
-        if (length(history()$predictions) > 0) 'T' else 'F'
+        if (length(history()$predictions) > 1) 'T' else 'F'
     })
     outputOptions(output, 'overallPlotAvailable', suspendWhenHidden=F)
 
@@ -58,7 +58,7 @@ shinyServer(function(input, output) {
     })
 
     output$informedPlotAvailable <- renderText({
-        if (any(history()$predictionInformed)) 'T' else 'F'
+        if (sum(history()$predictionInformed) > 1) 'T' else 'F'
     })
 
     output$playsBySituation <- renderPlot({

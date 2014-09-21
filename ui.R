@@ -38,9 +38,9 @@ shinyUI(fluidPage(
 	        tabPanel("Running p-value", 
 	        	conditionalPanel(
 	        		condition = "output.overallPlotAvailable === 'F'",
-	        		div(class="alert alert-info", 
+	        		div(class="alert alert-info alert-block", 
 	        			h4("No data yet"),
-	        			p("You haven't played the game (or you've reloaded the page), so there's no data to show yet.")
+	        			p("You haven't played the game long enough (or you've reloaded the page), so there's no data to show yet.")
 	        		)
 	        	),
 	        	plotOutput("overallScoreAndPvalue")

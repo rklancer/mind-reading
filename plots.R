@@ -49,7 +49,7 @@ plotScores <- function(df) {
 plotOverallScoreAndPvalue <- function(history) {
 	# get the cumulative scores
 
-	if (length(history$predictions) < 1) {
+	if (length(history$predictions) < 2) {
 		return(NULL)
 	}
 
@@ -76,7 +76,7 @@ plotInformedScoreAndPvalue <- function(history) {
 		choices = history$choices[history$predictionInformed]
 	)
 
-	if (length(h$predictions) < 1) {
+	if (length(h$predictions) < 2) {
 		return(NULL)
 	}
 
