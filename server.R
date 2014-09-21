@@ -3,11 +3,12 @@ source("mind-reader.R")
 source("plots.R")
 
 shinyServer(function(input, output) {
+
     reader <- mindReader()
     
     lastHeads <- 0
     lastTails <- 0
-    lastPlayerScore <- 0
+    lastComputerScore <- 0
     
     lastStats <- reactive({
         if (input$tail > lastTails) {
@@ -20,18 +21,18 @@ shinyServer(function(input, output) {
         }
 
         score <- reader$getScore()
-        playerWin <- score$playerScore > lastPlayerScore
-        lastPlayerScore <<- score$playerScore
-        totalScore <- score$computerScore + score$playerScore
+        computerWin <- score$computerScore > lastComputerScore
+        lastComputerScore <<- score$computerScore
 
         list(
-            message =       if (totalScore == 0) "" else if (playerWin) "" else "I WIN!!!",
+            computerWin   = computerWin,
             computerScore = score$computerScore, 
             playerScore =   score$playerScore
         )
     })
     
-    output$message       <- renderText({ lastStats()$message })
+    output$computerWin   <- renderText({ if (lastStats()$computerWin) 'T' else 'F' })
+    outputOptions(output, 'computerWin', suspendWhenHidden=F)
     output$computerScore <- renderText({ lastStats()$computerScore })
     output$playerScore   <- renderText({ lastStats()$playerScore })
     

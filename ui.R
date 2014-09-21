@@ -1,15 +1,22 @@
 library(shiny)
 
 shinyUI(fluidPage(
+
+	tags$style(type='text/css', ".game-button { width: 5em; margin-right: 1em }"),
+
     titlePanel("A Mind-Reading (?) Machine, Analyzed"),
 
     sidebarLayout(
     	sidebarPanel(
-	    	actionButton("head", "Left"),
-	    	actionButton("tail", "Right"),
+    		tags$button(id = "tail", type = "button", class = "btn action-button game-button", "Left"),
+	    	tags$button(id = "head", type = "button", class = "btn action-button game-button", "Right"),
 	    	br(),
 	    	textOutput("message", h2),
-	    	p("score: ", textOutput("computerScore", span), " - ", textOutput("playerScore", span))
+	    	p("score: ", textOutput("computerScore", span), " - ", textOutput("playerScore", span)),
+	    	conditionalPanel(
+	    		condition="output.computerWin == 'T'",
+	    		div(class=list("alert", "alert-block"), h4("Point for me!"))
+	    	)
     	),
 	    mainPanel(
 	      tabsetPanel(type = "tabs", 
