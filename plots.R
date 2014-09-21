@@ -1,3 +1,6 @@
+library(ggplot2)
+library(reshape)
+
 cumbinom <- function (wins) {
 	sapply(1:length(wins), function(n) {
     	binom.test(sum(wins[1:n]), n, 0.5, alternative='greater')$p.value
@@ -46,6 +49,10 @@ plotScores <- function(df) {
 plotOverallScoreAndPvalue <- function(history) {
 	# get the cumulative scores
 
+	if (length(history$predictions) < 1) {
+		return(NULL)
+	}
+
 	g <- plotScores(cumulativeScoreAndPvalue(history)) +
 		geom_rect(
 	    	aes(
@@ -68,6 +75,10 @@ plotInformedScoreAndPvalue <- function(history) {
 		predictions = history$predictions[history$predictionInformed],
 		choices = history$choices[history$predictionInformed]
 	)
+
+	if (length(h$predictions) < 1) {
+		return(NULL)
+	}
 
 	plotScores(cumulativeScoreAndPvalue(h)) + 
 	ggtitle("Hypothetical running score and p-value for one-sided\nbinomial test of P(computer guesses correctly) > 0.5\n(considering only guesses informed by player behavior)")

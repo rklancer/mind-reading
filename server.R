@@ -1,5 +1,6 @@
 library(shiny)
 source("mind-reader.R")
+source("plots.R")
 
 shinyServer(function(input, output) {
     reader <- mindReader()
@@ -34,19 +35,22 @@ shinyServer(function(input, output) {
     output$computerScore <- renderText({ lastStats()$computerScore })
     output$playerScore   <- renderText({ lastStats()$playerScore })
     
-    output$plot <- renderPlot({
-        if (input$done > 0) {
-            history <- reader$getHistory()
-            trials <- history$choices == history$predictions
+    history <- reactive({
+        lastStats()
+        saveRDS(history, paste(c('history-', sample(letters, 5, replace=T), '.rds'), collapse=''))
+        saveRDS(history, 'history.RDS')
+        reader$getHistory()
+    })
 
-            pHistory <- sapply(1:length(trials), function(n) {
-                binom.test(sum(trials[1:n]), n, 0.5, alternative='greater')$p.value
-            })
+    output$overallScoreAndPvalue <- renderPlot({
+        print(plotOverallScoreAndPvalue(history()))
+    })
 
-            plot(pHistory)
+    output$informedScoreAndPvalue <- renderPlot({
+        print(plotInformedScoreAndPvalue(history()))
+    })
 
-            saveRDS(history, paste(c('history-', sample(letters, 5, replace=T), '.rds'), collapse=''))
-            saveRDS(history, 'history.RDS')
-        }
+    output$playsBySituation <- renderPlot({
+        print(plotPlaysBySituation(history()))
     })
 })

@@ -9,8 +9,7 @@ shinyUI(fluidPage(
 	    	actionButton("tail", "Right"),
 	    	br(),
 	    	textOutput("message", h2),
-	    	p("score: ", textOutput("computerScore", span), " - ", textOutput("playerScore", span)),
-	    	actionButton("done", "Done!")
+	    	p("score: ", textOutput("computerScore", span), " - ", textOutput("playerScore", span))
     	),
 	    mainPanel(
 	      tabsetPanel(type = "tabs", 
@@ -25,13 +24,13 @@ shinyUI(fluidPage(
 			    wellPanel(p("To play:"),
 			    tags$ul(list(
 			    	tags$li("Keep clicking", em("Left"), " or ", em("Right"), " and try to keep the machine from outguessing you (the score will update automatically)."),
-			    	tags$li("When you are ready to analyze your performance, click \"Done\" and visit the tabs on the right to view statistics from your play.)")
+			    	tags$li("When you are ready to analyze your performance, visit the tabs on the right to view statistics from your play.)")
 			    ))),
 			    p(em("Tips"), "...")
 			),
-	        tabPanel("Running p-value", verbatimTextOutput("summary")), 
-	        tabPanel("Data-based predictions only", tableOutput("table")),
-	        tabPanel("Your predictability", tableOutput("table2"))
+	        tabPanel("Running p-value", plotOutput("overallScoreAndPvalue")), 
+	        tabPanel("Data-based predictions only", plotOutput("informedScoreAndPvalue")),
+	        tabPanel("Your predictability", plotOutput("playsBySituation"))
 	      )
 	    )
 	)
