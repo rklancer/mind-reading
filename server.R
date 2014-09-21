@@ -38,17 +38,27 @@ shinyServer(function(input, output) {
     
     history <- reactive({
         lastStats()
+        history <- reader$getHistory()
         saveRDS(history, paste(c('history-', sample(letters, 5, replace=T), '.rds'), collapse=''))
         saveRDS(history, 'history.RDS')
-        reader$getHistory()
+        history
     })
 
     output$overallScoreAndPvalue <- renderPlot({
         print(plotOverallScoreAndPvalue(history()))
     })
 
+    output$overallPlotAvailable <- renderText({
+        if (length(history()$predictions) > 0) 'T' else 'F'
+    })
+    outputOptions(output, 'overallPlotAvailable', suspendWhenHidden=F)
+
     output$informedScoreAndPvalue <- renderPlot({
         print(plotInformedScoreAndPvalue(history()))
+    })
+
+    output$informedPlotAvailable <- renderText({
+        if (any(history()$predictionInformed)) 'T' else 'F'
     })
 
     output$playsBySituation <- renderPlot({

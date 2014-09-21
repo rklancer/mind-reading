@@ -14,7 +14,7 @@ shinyUI(fluidPage(
 	    	textOutput("message", h2),
 	    	p("score: ", textOutput("computerScore", span), " - ", textOutput("playerScore", span)),
 	    	conditionalPanel(
-	    		condition="output.computerWin == 'T'",
+	    		condition="output.computerWin === 'T'",
 	    		div(class=list("alert", "alert-block"), h4("Point for me!"))
 	    	)
     	),
@@ -35,7 +35,16 @@ shinyUI(fluidPage(
 			    ))),
 			    p(em("Hint:"), "To get the most out of the game, treat the machine as if it's really trying to outsmart you. (It would work well as a party game, where slightly inebriated people could get \"into\" trying to keep the machine from achieving the higher score.) The machine cannot systematically beat a player who plays randomly without regard to whether he or she is \"winning\" or \"losing\". I have found that if you play in the \"party game\" spirit, after 50 or 100 plays, the one-sided binomial test shows that the machine is winning >50% of the matches.")
 			),
-	        tabPanel("Running p-value", plotOutput("overallScoreAndPvalue")), 
+	        tabPanel("Running p-value", 
+	        	conditionalPanel(
+	        		condition = "output.overallPlotAvailable === 'F'",
+	        		div(class="alert alert-info", 
+	        			h4("No data yet"),
+	        			p("You haven't played the game (or you've reloaded the page), so there's no data to show yet.")
+	        		)
+	        	),
+	        	plotOutput("overallScoreAndPvalue")
+	        ),
 	        tabPanel("Data-based predictions only", plotOutput("informedScoreAndPvalue")),
 	        tabPanel("Your predictability", plotOutput("playsBySituation"))
 	      )
