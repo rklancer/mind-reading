@@ -1,4 +1,5 @@
 library(ggplot2)
+library(scales)
 library(reshape)
 
 cumbinom <- function (wins) {
