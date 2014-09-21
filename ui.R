@@ -12,10 +12,10 @@ shinyUI(fluidPage(
 	    	tags$button(id = "head", type = "button", class = "btn action-button game-button", "Right"),
 	    	br(),
 	    	textOutput("message", h2),
-	    	p("score: ", textOutput("computerScore", span), " - ", textOutput("playerScore", span)),
+	    	p("Computer: ", textOutput("computerScore", span), " - You: ", textOutput("playerScore", span)),
 	    	conditionalPanel(
 	    		condition="output.computerWin === 'T'",
-	    		div(class=list("alert", "alert-block"), h4("Point for me!"))
+	    		div(class="alert alert-error alert-block", h4("HA! Point for me!"))
 	    	)
     	),
 	    mainPanel(
