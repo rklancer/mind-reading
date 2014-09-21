@@ -66,12 +66,9 @@ mindReader <- function() {
     predict <- function() {
         situation <- getSituation()
 
-        cat("\nPredicting using situation: ", situation)
-
         if ( ! is.na(situation) ) {
             last2Plays <- tail(pastPlaysBySituation[[situation]], 2)
             if (length(last2Plays) == 2 && identical(last2Plays[1], last2Plays[2])) {
-                cat(" (informed prediction!)")
                 return(list(
                     prediction = choose(tail(choices, 1), last2Plays[1]),
                     informed = TRUE
@@ -112,7 +109,6 @@ mindReader <- function() {
             return()
         }
         pastPlaysBySituation[[situation]] <<- c(pastPlaysBySituation[[situation]], play)
-        cat("\nupdating situation: ", situation, " for play: ", play, "\n")
     }
 
     play <- function(choice) {

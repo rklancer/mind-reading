@@ -39,8 +39,6 @@ shinyServer(function(input, output) {
     history <- reactive({
         lastStats()
         history <- reader$getHistory()
-        saveRDS(history, paste(c('history-', sample(letters, 5, replace=T), '.rds'), collapse=''))
-        saveRDS(history, 'history.RDS')
         history
     })
 
@@ -61,7 +59,7 @@ shinyServer(function(input, output) {
         if (sum(history()$predictionInformed) > 1) 'T' else 'F'
     })
     outputOptions(output, 'informedPlotAvailable', suspendWhenHidden=F)
-    
+
     output$playsBySituation <- renderPlot({
         print(plotPlaysBySituation(history()))
     })
