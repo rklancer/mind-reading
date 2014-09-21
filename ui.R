@@ -2,7 +2,7 @@ library(shiny)
 
 shinyUI(fluidPage(
 
-	tags$style(type='text/css', ".game-button { width: 5em; margin-right: 1em }"),
+	tags$style(type='text/css', ".game-button { width: 48%; }"),
 
     titlePanel("A Mind-Reading (?) Machine, Analyzed"),
 
