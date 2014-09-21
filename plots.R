@@ -8,22 +8,24 @@ cumbinom <- function (wins) {
 	})
 }
 
-cumulativeScoreAndPvalue <- function(history) {
-	df <- with(history, data.frame(
-		    trial         = seq_along(predictions), 
+cumulativeScoreAndPvalue <- function(h) {
+	df <- with(h, data.frame(
+		    trial         = seq_along(predictions),
+		    informed      = predictionInformed,
 		    computerScore = cumsum(predictions==choices), 
 		    playerScore   = cumsum(predictions!=choices)
 		))
 
-	df <- melt(df, id.vars=c('trial'))
+	df <- melt(df, id.vars=c('trial', 'informed'))
 	df <- cbind(df, type='score')
 
 	# add the cumulative pvalues
-	wins <- history$predictions == history$choices
+	wins <- h$predictions == h$choices
 	pHistory <- cumbinom(wins) 
 
 	df <- rbind(df, data.frame(
-		trial    = seq_along(pHistory), 
+		trial    = seq_along(pHistory),
+		informed = h$predictionInformed, 
 		variable = 'pvalue', 
 		value    = pHistory, 
 		type     = 'pvalue'
@@ -61,7 +63,7 @@ plotOverallScoreAndPvalue <- function(history) {
 				ymax  = Inf, 
 				xmin  = trial - 0.5, 
 				xmax  = trial + 0.5, 
-				alpha = history$predictionInformed[trial] & (variable == 'pvalue' | variable == 'playerScore')
+				alpha = informed & (variable == 'pvalue' | variable == 'playerScore')
 			),
 			color=alpha('black', 0)
 		) + 
@@ -74,7 +76,8 @@ plotOverallScoreAndPvalue <- function(history) {
 plotInformedScoreAndPvalue <- function(history) {
 	h <- list(
 		predictions = history$predictions[history$predictionInformed],
-		choices = history$choices[history$predictionInformed]
+		choices = history$choices[history$predictionInformed],
+		predictionInformed = rep(T, sum(history$predictionInformed))
 	)
 
 	if (length(h$predictions) < 2) {
